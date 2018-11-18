@@ -14,11 +14,6 @@ type node struct {
 	children [maxItems + 1]*node
 }
 
-type leaf struct {
-	numItems int
-	items    [maxItems]item
-}
-
 // BTree is an ordered set of key/value pairs where the key is a string
 // and the value is an interface{}
 type BTree struct {
