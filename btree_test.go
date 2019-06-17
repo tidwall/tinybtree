@@ -3,8 +3,12 @@ package tinybtree
 import (
 	"fmt"
 	"math/rand"
+	"runtime"
 	"sort"
+	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -565,4 +569,75 @@ func TestBTree256(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestBTreeRandom(t *testing.T) {
+	var count uint32
+	T := runtime.NumCPU()
+	D := time.Second
+	N := 1000
+	bkeys := make([]string, N)
+	for i, key := range rand.Perm(N) {
+		bkeys[i] = strconv.Itoa(key)
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(T)
+	for i := 0; i < T; i++ {
+		go func() {
+			defer wg.Done()
+			start := time.Now()
+			for {
+				r := rand.New(rand.NewSource(time.Now().UnixNano()))
+				keys := make([]string, len(bkeys))
+				for i, key := range bkeys {
+					keys[i] = key
+				}
+				testBTreeRandom(t, r, keys, &count)
+				if time.Since(start) > D {
+					break
+				}
+			}
+		}()
+	}
+	wg.Wait()
+	// println(count)
+}
+
+func shuffle(r *rand.Rand, keys []string) {
+	for i := range keys {
+		j := r.Intn(i + 1)
+		keys[i], keys[j] = keys[j], keys[i]
+	}
+}
+
+func testBTreeRandom(t *testing.T, r *rand.Rand, keys []string, count *uint32) {
+	var tr BTree
+	keys = keys[:rand.Intn(len(keys))]
+	shuffle(r, keys)
+	for i := 0; i < len(keys); i++ {
+		prev, ok := tr.Set(keys[i], keys[i])
+		if ok || prev != nil {
+			t.Fatalf("expected nil")
+		}
+	}
+	shuffle(r, keys)
+	for i := 0; i < len(keys); i++ {
+		prev, ok := tr.Get(keys[i])
+		if !ok || prev != keys[i] {
+			t.Fatalf("expected '%v', got '%v'", keys[i], prev)
+		}
+	}
+	shuffle(r, keys)
+	for i := 0; i < len(keys); i++ {
+		prev, ok := tr.Delete(keys[i])
+		if !ok || prev != keys[i] {
+			t.Fatalf("expected '%v', got '%v'", keys[i], prev)
+		}
+		prev, ok = tr.Get(keys[i])
+		if ok || prev != nil {
+			t.Fatalf("expected nil")
+		}
+	}
+	atomic.AddUint32(count, 1)
 }
