@@ -22,18 +22,18 @@ type BTree struct {
 	length int
 }
 
+// find the the index the key locate or the index to insert
 func (n *node) find(key string) (index int, found bool) {
 	i, j := 0, n.numItems
 	for i < j {
 		h := i + (j-i)/2
-		if key >= n.items[h].key {
+		if key > n.items[h].key {
 			i = h + 1
-		} else {
+		} else if key < n.items[h].key {
 			j = h
+		}else {
+			return h, true
 		}
-	}
-	if i > 0 && n.items[i-1].key >= key {
-		return i - 1, true
 	}
 	return i, false
 }
