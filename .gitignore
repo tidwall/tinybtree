@@ -1,0 +1,6 @@
+.DS_Store
+
+
+# Ignore IDE folders
+.idea/
+.vscode/
