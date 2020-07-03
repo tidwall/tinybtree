@@ -23,19 +23,24 @@ type BTree struct {
 }
 
 func (n *node) find(key string) (index int, found bool) {
-	i, j := 0, n.numItems
-	for i < j {
-		h := i + (j-i)/2
-		if key >= n.items[h].key {
-			i = h + 1
+	low := 0
+	high := n.numItems - 1
+	for low <= high {
+		mid := low + ((high+1)-low)/2
+		if key >= n.items[mid].key {
+			low = mid + 1
 		} else {
-			j = h
+			high = mid - 1
 		}
 	}
-	if i > 0 && n.items[i-1].key >= key {
-		return i - 1, true
+	if low > 0 && n.items[low-1].key == key {
+		index = low - 1
+		found = true
+	} else {
+		index = low
+		found = false
 	}
-	return i, false
+	return index, found
 }
 
 // Set or replace a value for a key
