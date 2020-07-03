@@ -1,6 +1,6 @@
 package tinybtree
 
-const maxItems = 31 // use an odd number
+const maxItems = 255
 const minItems = maxItems * 40 / 100
 
 type item struct {
