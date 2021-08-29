@@ -6,7 +6,6 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -25,64 +24,6 @@ func randKeys(N int) (keys []string) {
 		keys = append(keys, fmt.Sprintf(format, i))
 	}
 	return
-}
-
-const flatLeaf = true
-
-func (tr *BTree) print() {
-	tr.root.print(0, tr.height)
-}
-
-func (n *node) print(level, height int) {
-	if n == nil {
-		println("NIL")
-		return
-	}
-	if height == 0 && flatLeaf {
-		fmt.Printf("%s", strings.Repeat("  ", level))
-	}
-	for i := 0; i < n.numItems; i++ {
-		if height > 0 {
-			n.children[i].print(level+1, height-1)
-		}
-		if height > 0 || (height == 0 && !flatLeaf) {
-			fmt.Printf("%s%v\n", strings.Repeat("  ", level), n.items[i].key)
-		} else {
-			if i > 0 {
-				fmt.Printf(",")
-			}
-			fmt.Printf("%s", n.items[i].key)
-		}
-	}
-	if height == 0 && flatLeaf {
-		fmt.Printf("\n")
-	}
-	if height > 0 {
-		n.children[n.numItems].print(level+1, height-1)
-	}
-}
-
-func (tr *BTree) deepPrint() {
-	fmt.Printf("%#v\n", tr)
-	tr.root.deepPrint(0, tr.height)
-}
-
-func (n *node) deepPrint(level, height int) {
-	if n == nil {
-		fmt.Printf("%s %#v\n", strings.Repeat("  ", level), n)
-		return
-	}
-	fmt.Printf("%s count: %v\n", strings.Repeat("  ", level), n.numItems)
-	fmt.Printf("%s items: %v\n", strings.Repeat("  ", level), n.items)
-	if height > 0 {
-		fmt.Printf("%s child: %v\n", strings.Repeat("  ", level), n.children)
-	}
-	if height > 0 {
-		for i := 0; i < n.numItems; i++ {
-			n.children[i].deepPrint(level+1, height-1)
-		}
-		n.children[n.numItems].deepPrint(level+1, height-1)
-	}
 }
 
 func stringsEquals(a, b []string) bool {
@@ -118,8 +59,7 @@ func TestDescend(t *testing.T) {
 		return true
 	})
 	for i := 999; i >= 0; i-- {
-		var key string
-		key = fmt.Sprintf("%03d", i)
+		key := fmt.Sprintf("%03d", i)
 		var all []string
 		tr.Descend(key, func(key string, value interface{}) bool {
 			all = append(all, key)
@@ -130,7 +70,7 @@ func TestDescend(t *testing.T) {
 		}
 		var count int
 		tr.Descend(key, func(key string, value interface{}) bool {
-			if count == (i+1)%maxItems {
+			if count == (i+1)%256 {
 				return false
 			}
 			count++
@@ -182,7 +122,7 @@ func TestAscend(t *testing.T) {
 		}
 		var count int
 		tr.Ascend(key, func(key string, value interface{}) bool {
-			if count == (i+1)%maxItems {
+			if count == (i+1)%256 {
 				return false
 			}
 			count++
